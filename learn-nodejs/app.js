@@ -1,6 +1,5 @@
-module.exports={
+const fs = require('fs');
+// fs.writeFileSync("sugat.js","this the file text");
 
-name:"sugat",
-lastName:"jamgade",
-
-}
+const sugat = require('./sugat.js');
+console.log(sugat);
