@@ -1,7 +1,11 @@
 const http = require("http");
+const data =require('./data');
+http.createServer((req, resp) => {
+    resp.writeHead(200, { "Content-Type": "applicationjson" });
+    resp.write(JSON.stringify(data));
+   
+    resp.end();
+  })
+  .listen(4500);
 
-http.createServer((req,resp)=>{
-
-resp.write("<h>hello</h");
-resp.end();
-}).listen(4500);
+  
