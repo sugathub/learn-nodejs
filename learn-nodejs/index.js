@@ -1,15 +1,56 @@
 const express = require("express");
 const fs = require("fs");
+const mongoose = require("mongoose");
+
 const users = require("./MOCK_DATA.json");
 const { request } = require("http");
+const { type } = require("os");
+const { generateKey } = require("crypto");
 const port = 8000;
+
+// Connection
+
+mongoose.connect("mongodb://localhost:27017/youtub-1")
+    .then(() => console.log("MongoDB Connected "))
+    .catch(err => console.log("mongo err: ", err));
+
+//schema
+const userSchema = new mongoose.Schema({
+
+    first_name: {
+        type: String,
+        required: true,
+    },
+    last_name: {
+        type: String,
+    },
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+    },
+    jobTitle: {
+        type: String,
+    },
+    gender: {
+        type: String,
+    },
+},{timestamps:true});
+
+
+const User = mongoose.model("user", userSchema);
+
+
+
+
+
 
 const app = express();
 
 
-app.use(express.urlencoded({extended:false}));
+app.use(express.urlencoded({ extended: false }));
 
-const ok = ((req,rep,next)=>{
+const ok = ((req, rep, next) => {
     console.log("ok");
     next();
 })
@@ -23,8 +64,8 @@ app.get("/api/users", (req, rep) => {
 })
 
 app.get("/users", (req, rep) => {
-        rep.setHeader("x-name","sugat")
-            console.log(req.headers);
+    rep.setHeader("x-name", "sugat")
+    console.log(req.headers);
 
 
 
@@ -83,33 +124,40 @@ app.get("/users/:id", (req, rep) => {
 
 
 
-app.post("/api/users" ,(req,res)=>{
+app.post("/api/users", async (req, res) => {
 
-const body = req.body;
+    const body = req.body;
 
-if(!body.first_name || !body.first_name || !body.last_name || !body.email  || !body.gender || !body.job_title){
-    return res.status(400).json({"mes":" bad request"});
-}
-users.push({...body,id:users.length +1 });
-fs.writeFile("./MOCK_DATA.json",JSON.stringify(users),(err,data)=>{
-        return res.status(201).json({status: "success",id: users.length+1});
+    if (!body.first_name  || !body.last_name || !body.email || !body.gender || !body.job_title) {
+        return res.status(400).json({ "mes": " bad request" });
+    }
+    const result = await User.create({
+        first_name : body.first_name,
+        last_name: body.last_name,
+       gender: body.gender,
+       email: body.email,
+      job_title: body.job_title,
+    });
 
-});
+    console.log("result ",result);
+
+    return res.status(201).json({msg:"success"});
 
 })
-app.delete("/api/users/:id",(req,res)=>{
-    const id = Number(req.params.id);
-    const index =users.find(user => user.id ===id)
-    if(index === -1){
-        return res.status(404).json({status:"user not found"});
-    }
-    users.splice(index,1);
 
-    fs.writeFile("./MOCK_DATA.json",JSON.stringify(users,null,2),(err)=>{
-        if(err){
-            return res.status(500).json({status: "Error saving data"});
+app.delete("/api/users/:id", (req, res) => {
+    const id = Number(req.params.id);
+    const index = users.find(user => user.id === id)
+    if (index === -1) {
+        return res.status(404).json({ status: "user not found" });
+    }
+    users.splice(index, 1);
+
+    fs.writeFile("./MOCK_DATA.json", JSON.stringify(users, null, 2), (err) => {
+        if (err) {
+            return res.status(500).json({ status: "Error saving data" });
         }
-        return res.json({status: "User deleted successfully"});
+        return res.json({ status: "User deleted successfully" });
     });
 })
 
